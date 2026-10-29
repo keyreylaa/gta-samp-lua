@@ -23,7 +23,7 @@ Install into a specific project:
 curl -fsSL https://raw.githubusercontent.com/keyreylaa/gta-samp-lua/main/install.sh | bash -s -- --dir /path/to/project
 ```
 
-The installer picks git if available, otherwise falls back to the tarball, so it works even without git. It installs to `.agents/skills/gta-samp-lua/` (read by OpenCode, Claude Code, Codex, Pi, Gemini CLI) and appends a pointer to `AGENTS.md` for Cursor.
+The installer picks git if available, otherwise falls back to the tarball, so it works even without git. It installs to OpenCode's primary path (`.opencode/skills/` project, `~/.config/opencode/skills/` global) plus cross-agent compatibility paths (`.agents/skills/`, `.claude/skills/`), and appends a pointer to `AGENTS.md` for Cursor.
 
 - Script lifecycle: `main`, `wait`, events, reload, cleanup.
 - GUI with mimgui: windows, widgets, render callback, state.
@@ -45,7 +45,7 @@ Copy the whole `gta-samp-lua/` folder into one of these locations.
 
 | Agent | Project-level | Global |
 |---|---|---|
-| OpenCode | `.agents/skills/gta-samp-lua/` | `~/.agents/skills/gta-samp-lua/` |
+| OpenCode | `.opencode/skills/gta-samp-lua/` (primary) or `.agents/skills/gta-samp-lua/` | `~/.config/opencode/skills/gta-samp-lua/` (primary) or `~/.opencode/skills/gta-samp-lua/` |
 | Claude Code | `.claude/skills/gta-samp-lua/` | `~/.claude/skills/gta-samp-lua/` |
 | Codex | `.agents/skills/gta-samp-lua/` | `~/.agents/skills/gta-samp-lua/` |
 | Pi | `.agents/skills/gta-samp-lua/` | `~/.pi/agent/skills/gta-samp-lua/` or `~/.agents/skills/gta-samp-lua/` |
