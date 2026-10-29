@@ -5,7 +5,25 @@ MoonLoader, MonetLoader (Android), and `.dex` modules.
 
 Compatible with OpenCode, Claude Code, Codex, Pi, Gemini CLI, and Cursor.
 
-## What it covers
+## Install (one command)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/keyreylaa/gta-samp-lua/main/install.sh | bash
+```
+
+Global install (into `~/.agents/skills/`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/keyreylaa/gta-samp-lua/main/install.sh | bash -s -- --global
+```
+
+Install into a specific project:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/keyreylaa/gta-samp-lua/main/install.sh | bash -s -- --dir /path/to/project
+```
+
+The installer picks git if available, otherwise falls back to the tarball, so it works even without git. It installs to `.agents/skills/gta-samp-lua/` (read by OpenCode, Claude Code, Codex, Pi, Gemini CLI) and appends a pointer to `AGENTS.md` for Cursor.
 
 - Script lifecycle: `main`, `wait`, events, reload, cleanup.
 - GUI with mimgui: windows, widgets, render callback, state.
