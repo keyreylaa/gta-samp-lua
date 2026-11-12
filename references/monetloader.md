@@ -83,6 +83,23 @@ local address = tonumber(ffi.cast('uintptr_t', ffi.cast('void*', gta.AIMWEAPON_S
 - The offsets of the 64-bit build can be dumped from the device (`dump-gtasa-offsets.lua`
   in the test scripts); do not mix them with a 32-bit table.
 
+## Handle or pointer
+
+The script commands take a **handle** (the id of the game), the structures of the game take a
+**pointer**. The two are not interchangeable:
+
+```lua
+local handle = getPlayerChar(0)        -- handle of the player's ped
+local health = getCharHealth(handle)   -- opcode: handle
+local ped    = getCharPointer(handle)  -- pointer: ffi, structures, matrices
+```
+
+- `getCharHealth`, `getCharArmour`, `getCharCoordinates`, `isCharInVehicle`,
+  `isCharSitting` and the other commands of `opcodes.cpp` want a handle.
+- `getCharPointer`, `getCharPointerHandle`, and every `ffi` read want a pointer.
+- A pointer is not a handle: passing one to an opcode reads a slot that does not exist and
+  answers 0 (or worse). A handle is not a pointer: passing one to `ffi` reads the pool slot.
+
 ## SAMP availability and threads
 
 - `isSampAvailable()` is true once the RakNet hooks are in place; `samp*` calls before that

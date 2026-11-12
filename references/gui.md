@@ -132,7 +132,9 @@ dl:AddRectFilled(a, b, colour, rounding)
 dl:AddTextFontPtr(imgui.GetFont(), size, pos, colour, text)
 ```
 
-`imgui.GetFont()` is the current font; the size is the pixel size of that font.
+Inside a window, `imgui.GetWindowDrawList()` is the draw list of that window; its coordinates
+are absolute screen pixels. `imgui.GetFont()` is the current font; the size is the pixel size
+of that font.
 
 ## Gotchas
 

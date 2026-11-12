@@ -39,6 +39,9 @@ Do not use for generic Lua unrelated to GTA SA-MP or for C/C++ plugin code.
    taken the process down inside LuaJIT. Use `imgui.TextUnformatted` with `string.format`
    (see `references/gui.md`).
 10. RakNet is not thread safe: a packet is sent from the game thread only.
+11. A script command takes a handle, a game structure takes a pointer: `getCharHealth(handle)`
+    works, `getCharHealth(pointer)` reads a slot that does not exist (see
+    `references/monetloader.md`).
 
 ## Reference map
 
@@ -71,6 +74,7 @@ Before finalizing any script, verify:
 - [ ] No global leaks: all locals.
 - [ ] Platform guards present where code is platform-specific; no PC offset in a 64-bit script.
 - [ ] Every game pointer is checked before use (the game is still loading when scripts run).
+- [ ] A handle is passed to a command and a pointer to `ffi`, never the other way round.
 - [ ] GUI uses `imgui.OnFrame` (not `imgui.OnDrawFrame`); `TextUnformatted` for formatted text.
 - [ ] Fonts are added in `imgui.OnInitialize`, textures after the renderer exists.
 - [ ] The UI is scaled from `MONET_DPI_SCALE` when present, otherwise from the resolution.
