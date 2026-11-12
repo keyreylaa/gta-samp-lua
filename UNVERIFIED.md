@@ -1,39 +1,44 @@
-# UNVERIFIED.md — items not verifiable from lib/ or official docs
+# UNVERIFIED.md — what is not covered by this skill
 
-These are intentionally excluded or flagged. Verify manually before relying on them.
+The items below were flagged as unverified in earlier revisions. The ones that could be
+checked against the loader sources of this client are now documented in `references/`;
+the rest is listed here so a future agent does not trust it blindly.
 
-## Runtime globals (MoonLoader/MonetLoader, not in lib/)
+## Verified against the MonetLoader sources of this client
 
-- `main`, `wait`, `addEventHandler`, `script.this`, `thisScript`, `getMoonloaderVersion`, `isSampLoaded`, `isSampfuncsLoaded`, `isCleoLoaded`, `reloadScripts`, `getWorkingDirectory`, `sampAddChatMessage`, `sampRegisterChatCommand`, `sampUnregisterChatCommand`, `addCommand`, `getGameGlobal`, `setGameGlobal`, `isKeyDown`, `showCursor`, `lockPlayerControl`, `isGamePaused`, `gameClock`, `consumeWindowMessage`, `encodeJson`, `decodeJson`, `import`, `script_properties`, `script_url`, `representFloatAsInt`. These are documented by the MoonLoader wiki (Russian) at https://wiki.blast.hk/moonloader/scripting-api and by project AGENTS.md. Signatures here are from wiki/usage, not from a source file in this workspace. Verify against the installed loader version.
+- mimgui API used by the references: `imgui.OnFrame`, `imgui.new.*`, `imgui.Image`,
+  `imgui.Combo`, `imgui.SliderFloat`, `imgui.ColorEdit3`, `imgui.TextUnformatted`,
+  `imgui.PushStyleColorU32` / `PushStyleVarFloat` / `PushStyleVarVec2` and their pops,
+  the enum tables (`imgui.Col`, `imgui.StyleVar`, `imgui.Cond`, `imgui.WindowFlags`),
+  `mimgui.CreateTextureFromFile`, `mimgui.ReleaseTexture`, `mimgui.CreateFontsTexture`,
+  `mimgui.InvalidateFontsTexture`, `imgui.OnInitialize`.
+- Font model: `lib/mimgui/trebucbd.ttf` added at `14 * MONET_DPI_SCALE` on the first frame,
+  `AddFontFromFileTTF`, `AddFontFromMemoryTTF`, `ImFontGlyphRangesBuilder`,
+  `ImVector_ImWchar`, `MergeMode`.
+- Globals: `MONET_VERSION`, `MONET_DPI_SCALE`, `MONET_GTASA_BASE`, `PLAYER_PED`,
+  `PLAYER_HANDLE`.
+- `inicfg` writes sections only; a value at the top of the table makes `save` assert.
+- Bullet sync is the packet `PACKET.BULLET_SYNC` (206) with `BulletSyncData` (40 bytes),
+  handled by `onSendBulletSync` / `onBulletSync`.
 
-## MoonLoader event signatures
+## Still unverified
 
-- `onExitScript(quitGame)`, `onQuitGame`, `onScriptLoad`, `onSystemInitialized`, `onScriptMessage`, `onSystemMessage`, `onTouch`. Names come from project AGENTS.md. Parameter shapes are not verified against source; check the wiki.
+- The complete list of mimgui functions: `imgui.lua` is an auto-generated binding of the
+  whole Dear ImGui API. Read it before using a function this skill does not name.
+- Font behaviour when a device has no TTF at `lib/mimgui/`: the loader asserts on a missing
+  font file, so a loader without it does not reach the scripts.
+- `.dex` loading on this client: `MoonMonet` is a 32-bit `.so` in the shipped modules and
+  cannot be loaded by the 64-bit client. No verified `.dex` path on 64-bit yet.
+- `isKeyDown`: the loader has no keyboard state; a script that reads the keyboard needs an
+  event from the client that does not exist yet.
+- `getFolderPath(id)`: the ids of the 32-bit build do not apply.
+- Camera angles for PC-style scripts: the offsets of the PC build (`0xB6F248`/`0xB6F258`) are
+  not the ones of this client; the camera object of the 64-bit build is `TheCamera`
+  (`0xBBA8D0`) with the angles at `+0x220`/`+0x230`. There is no loader API for them yet.
 
-## mimgui exact signatures
+## Conventions to keep
 
-- `lib/mimgui/imgui.lua` is an auto-generated binding (1950+ lines). Function names drop the `ig` prefix and keep ImGui's C signature, but exact parameter order/types must be read from that file. The skill describes patterns, not full signatures. Verify against `lib/mimgui/imgui.lua` or `lib/mimgui/cdefs.lua` for any function used.
-
-## inicfg / jsoncfg / requests exact API
-
-- These modules exist in `lib/` but their exact function names were not exhaustively audited. Inspect the file before calling. `ScreenRecorder.lua` uses `inicfg` for settings; copy its usage pattern.
-
-## SAMPFUNCS function availability
-
-- `sampfuncs.lua` only defines constants. Functions like `sampAddChatMessage`, `raknetBitStream*`, `sampRegisterChatCommand` come from the SAMPFUNCS plugin and vary by build/version. Guard every call with `type(...) == "function"`.
-
-## Font API
-
-- Dear ImGui font functions (`AddFontFromFileTTF`, `ImFontGlyphRangesBuilder`, merge mode) are exposed through the binding but their exact Lua-side parameter forms must be checked in `lib/mimgui/imgui.lua`/`cdefs.lua`. The skill describes the ImGui model, not verified Lua signatures.
-
-## MoonMonet
-
-- `lib/MoonMonet/init.lua` and the `.so` were not audited line-by-line for function names. Inspect before use.
-
-## SAMemory on Android
-
-- SAMemory targets the PC GTASA binary with mangled symbol names. Its applicability to MonetLoader/Android is not verified; treat as PC-only.
-
-## Memory protection on Android
-
-- `memory.unprotect` may fail on Android (execmod restrictions). The fallback to READWRITE is implemented, but write success is not guaranteed on all devices.
+- This skill documents the loader of this client and of MoonLoader on PC. A different loader
+  version can rename or drop an API: check the `lib/` of that installation first.
+- Never present an unverified offset as fact. Dump the offsets of the build at hand
+  (`dump-gtasa-offsets.lua`) instead of copying them from a forum post.

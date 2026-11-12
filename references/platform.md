@@ -18,7 +18,9 @@ Source: `lib/moonloader.lua`, `lib/monetloader.lua`, `lib/android.lua`, `lib/mem
 - Memory patching may be restricted (execmod); `mprotect` fallback.
 - SAMemory symbols (PC mangled names) do not apply.
 - Commands: `sampRegisterChatCommand`.
-- GUI: mimgui binding to `monetloader` (Android build); `imgui.OnFrame`/`OnDrawFrame` both possible.
+- GUI: mimgui binding to `monetloader` (Android build). This build has `imgui.OnFrame`,
+  not the older `imgui.OnDrawFrame`. The loader owns the input: `mimgui.DisableInput = true`
+  turns the script's input handling off (there is no `imgui.Process`).
 
 ## .dex modules (Java)
 
@@ -37,5 +39,5 @@ Source: `lib/moonloader.lua`, `lib/monetloader.lua`, `lib/android.lua`, `lib/mem
 
 - Do not assume `ffi` is available on every MonetLoader build; `tryRequire` and degrade.
 - `getWorkingDirectory()` differs (PC vs Android media path).
-- Touch input on Android: set `imgui.Process = false` when no window is interactive.
+- Touch input on Android: the loader owns it; `mimgui.DisableInput` turns the script's part off.
 - File paths: use `/sdcard/...` on Android; relative paths resolve to the script working dir.

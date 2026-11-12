@@ -26,16 +26,17 @@ curl -fsSL https://raw.githubusercontent.com/keyreylaa/gta-samp-lua/main/install
 The installer picks git if available, otherwise falls back to the tarball, so it works even without git. It installs to OpenCode's primary path (`.opencode/skills/` project, `~/.config/opencode/skills/` global) plus cross-agent compatibility paths (`.agents/skills/`, `.claude/skills/`), and appends a pointer to `AGENTS.md` for Cursor.
 
 - Script lifecycle: `main`, `wait`, events, reload, cleanup.
-- GUI with mimgui: windows, widgets, render callback, state.
-- Fonts: loading, glyph ranges (non-Latin), merge mode.
+- GUI with mimgui: windows, widgets, images (textures), render callback, state.
+- Fonts: loading, glyph ranges (non-Latin), merge mode, icon fonts.
+- Screen density: `MONET_DPI_SCALE` when present, resolution fallback when not.
 - Chat commands: registration, parsing, removal, platform fallback.
-- RakNet: RPC/packet hooking, bitstream types, read/write.
+- RakNet: RPC/packet hooking, bitstream types, read/write, bullet sync (packet 206).
 - Sync: PlayerSync/VehicleSync/... structs, outgoing and incoming handlers.
 - SA-MP event names and payloads (from `lib/samp/events.lua`).
 - SAMPFUNCS constants.
 - Android JNI, DexClassLoader, `.dex` workflow.
 - Native hooks via `monethook`.
-- Memory read/write, pools, metatypes.
+- Memory read/write, pools, metatypes, 32-bit vs 64-bit offsets.
 - Platform differences (MoonLoader vs MonetLoader vs `.dex`).
 - Authoring your own `lib/`-style module.
 

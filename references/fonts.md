@@ -1,41 +1,80 @@
 # Fonts in mimgui
 
-Source: `lib/mimgui/imgui.lua`, `lib/mimgui/cdefs.lua`, `ScreenRecorder.lua`. Dear ImGui font API is exposed via the binding.
+Verified against `dist/lib/mimgui/{init,imgui,cdefs}.lua`.
 
-## Loading a font
+## The font that is already there
 
-Dear ImGui fonts are added to the global font atlas before the first frame. Typical pattern (from ImGui binding, names follow C API):
+`mimgui` builds its renderer on the first frame and adds `lib/mimgui/trebucbd.ttf`
+(Trebuchet MS Bold) at `14 * MONET_DPI_SCALE` pixels. A script that only draws text needs
+to do nothing: that font is the default of the atlas.
+
+`MONET_DPI_SCALE` is the display density of the device divided by 200, never below 1. It is
+`1.346` on a 269 dpi phone. It is a loader global, not a constant of the script.
+
+## Adding another font
+
+Fonts are added to the atlas while the atlas is being built, so the call belongs in
+`imgui.OnInitialize`:
 
 ```lua
-local io = imgui.GetIO()
-local fonts = io.Fonts
-local font = fonts:AddFontFromFileTTF(path, size, nil, glyphRanges)
+imgui.OnInitialize(function()
+    local io = imgui.GetIO()
+    local builder = imgui.ImFontGlyphRangesBuilder()
+    builder:AddText([[‚„…†‡€‰‹‘’“”•–—™›]])
+    builder:AddRanges(io.Fonts:GetGlyphRangesCyrillic())
+    local ranges = imgui.ImVector_ImWchar()
+    builder:BuildRanges(ranges)          -- keep the vector alive, the atlas points into it
+    io.Fonts:AddFontFromFileTTF(
+        getWorkingDirectory() .. '/lib/mimgui/trebucbd.ttf',
+        14 * MONET_DPI_SCALE, nil, ranges[0].Data)
+    mimgui.CreateFontsTexture()          -- upload the new atlas to the GPU
+end)
 ```
 
-- `AddFontFromFileTTF(filename, size_pixels, font_cfg, glyph_ranges)` returns an `ImFont*`.
-- `glyph_ranges` is a pointer to an array of `ImWchar` pairs terminated by 0 (built with `ImFontGlyphRangesBuilder` or the built-in `GetGlyphRangesDefault/Cyrillic/ChineseFull/...`).
-- `MergeMode` in `ImFontConfig` merges a second font into the first (useful for icon fonts or CJK fallback).
+- `AddFontFromFileTTF(filename, size_pixels, font_cfg, glyph_ranges)`.
+- `AddFontFromMemoryTTF(data, size_bytes, size_pixels, font_cfg, glyph_ranges)`.
+- `font_cfg` may be `nil`; use `imgui.ImFontConfig()` when you need `MergeMode`,
+  `PixelSnapH`, `FontDataOwnedByAtlas`.
+- `imgui.ImVector_ImWchar()` is the `ImWchar*` holder; pass `vec[0].Data`.
+- `mimgui.InvalidateFontsTexture()` drops the uploaded texture; call it before
+  `CreateFontsTexture()` when the atlas changes after the first frame.
 
-## Glyph ranges
+## Icon fonts (merged)
 
-- Default range covers Latin-1. Cyrillic, Greek, CJK need explicit ranges.
-- Built-in helpers: `fonts:GetGlyphRangesDefault()`, `GetGlyphRangesCyrillic()`, `GetGlyphRangesChineseFull()`, `GetGlyphRangesJapanese()`, `GetGlyphRangesKorean()`, `GetGlyphRangesThai()`, `GetGlyphRangesVietnamese()`.
-- For arbitrary ranges, use `ImFontGlyphRangesBuilder`.
+An icon font is added **after** the text font with `MergeMode = true`, and the codepoints
+must be in the glyph range:
 
-## Displaying text with a font
+```lua
+imgui.OnInitialize(function()
+    local io = imgui.GetIO()
+    local cfg = imgui.ImFontConfig()
+    cfg.MergeMode = true
+    cfg.PixelSnapH = true
+    local builder = imgui.ImFontGlyphRangesBuilder()
+    for _, cp in pairs(ICON_RANGES) do builder:AddText(utf8.char(cp)) end
+    local ranges = imgui.ImVector_ImWchar()
+    builder:BuildRanges(ranges)
+    ICONS = io.Fonts:AddFontFromMemoryCompressedBase85TTF(data85, 16 * MONET_DPI_SCALE, cfg, ranges[0].Data)
+    io.FontDefault = ICONS or io.FontDefault
+    mimgui.CreateFontsTexture()
+end)
+```
 
-- `imgui.PushFont(font)` / `imgui.PopFont()` around the draw calls.
-- Font size is fixed at load; scale via `io.FontGlobalScale` or load multiple sizes.
+## Size of the text
 
-## Non-Latin / emoji
-
-- The TTF must contain the glyphs; the range must include their codepoints.
-- Icon fonts (FontAwesome) are loaded as a merged font with a custom range (`faIcons.lua`, `fAwesome6.lua` in `lib/` provide codepoint constants).
+- The size is baked into the atlas. Different sizes mean different `ImFont*` values.
+- `io.FontGlobalScale` scales the glyphs at draw time. It is read when the frame starts, so
+  setting it inside a draw callback has no effect until the next frame, and it applies to
+  every mimgui window of the process. Set it once, in `imgui.OnInitialize`.
 
 ## Gotchas
 
-- Fonts must be added before the atlas is built; adding after `Build()` is a no-op unless you call `Clear()` + rebuild.
-- On Android, file paths use the MonetLoader working directory; use `getWorkingDirectory()` to resolve.
-- A missing glyph renders as `?` or a box; verify the range includes the codepoint.
-- `ImFontConfig.MergeMode = true` is required when merging an icon font into the default.
-- Font rebuilds invalidate all `ImFont*` pointers; do not cache across rebuilds.
+- Adding a font after the atlas is built is ignored. Either use `imgui.OnInitialize` or
+  rebuild with `mimgui.CreateFontsTexture()`.
+- A font pointer survives only until the next rebuild. Do not cache it in a config file or
+  across a reload.
+- A glyph that is not in the range renders as `?` or an empty box. Check the range.
+- A TTF that cannot be read makes the atlas fail; guard with `doesFileExist(path)` before
+  adding it.
+- Paths are resolved from the working directory: `getWorkingDirectory()` on Android points
+  at the media folder of the game (`/storage/emulated/0/Android/media/<pkg>/monetloader`).

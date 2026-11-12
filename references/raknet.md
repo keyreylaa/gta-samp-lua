@@ -41,8 +41,37 @@ Raw helpers (from SAMPFUNCS, used in handlers): `raknetBitStreamReadBuffer`, `ra
 - `raknet.RPC.*` and `raknet.PACKET.*` (from `lib/samp/raknet.lua`).
 - Priority/reliability constants from `lib/sampfuncs.lua`: `SYSTEM_PRIORITY`, `HIGH_PRIORITY`, `MEDIUM_PRIORITY`, `LOW_PRIORITY`; `UNRELIABLE`, `UNRELIABLE_SEQUENCED`, `RELIABLE`, `RELIABLE_ORDERED`, `RELIABLE_SEQUENCED`.
 
+## Bullet sync
+
+The bullet is a packet, not an RPC: `PACKET.BULLET_SYNC` (206). `lib/samp/events.lua` maps it
+to two handlers:
+
+```lua
+function onSendBulletSync(data)   -- outgoing, the player's own bullet
+function onBulletSync(playerId, data)  -- incoming, another player's bullet
+```
+
+`data` is a `BulletSyncData` (packed, 40 bytes):
+
+```c
+uint8_t   targetType;
+uint16_t  targetId;
+VectorXYZ origin;   // the muzzle
+VectorXYZ target;   // the aim point
+VectorXYZ center;   // the hit point, zero when the bullet hit nothing
+uint8_t   weaponId;
+```
+
+- `center` is zero when the bullet did not hit an entity, but the client game fills the hit
+  point in that case, so a script that wants the hit point filters on `center` being non-zero.
+- A client that sends the bullet sync itself may leave `center` empty; do not rely on it
+  being filled by the packet.
+- The tracer that draws the line uses `origin` and `center`, and falls back to `target`.
+
 ## Gotchas
 
+- The RakNet interface is not thread safe. A packet is sent from the game thread; a script
+  callback runs there, a Java/JNI callback does not.
 - Outgoing sync handler receives the struct pointer directly (e.g. `PlayerSyncData*`); mutate `data.field` in place. Returning `false` cancels the sync.
 - Do not reassign the pointer; the bitstream reads from the same memory.
 - Returning `false` consumes the packet; returning a table rewrites it; returning nothing passes through.
