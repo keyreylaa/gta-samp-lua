@@ -25,7 +25,7 @@ end
 imgui.OnInitialize(function()
     local path = getWorkingDirectory() .. '/config/icon.png'
     if doesFileExist(path) then
-        icon = mimgui.CreateTextureFromFile(path)
+        icon = imgui.CreateTextureFromFile(path) -- a module function, not a widget
     end
 end)
 

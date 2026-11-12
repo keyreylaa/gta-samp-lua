@@ -9,6 +9,13 @@ The names below are the ones that exist there. Nothing else is documented here.
 local imgui = require 'mimgui'   -- assert MONET_VERSION ~= nil, the module is MonetLoader-only
 ```
 
+`require 'mimgui'` returns the module of the loader (`init.lua`), and the module falls back
+to the Dear ImGui binding (`imgui.lua`). The renderer lives on the module: `CreateTextureFromFile`,
+`CreateTextureFromFileInMemory`, `ReleaseTexture`, `CreateFontsTexture`,
+`InvalidateFontsTexture`, `OnFrame`, `OnInitialize`, `SwitchContext`, `GetRenderer`,
+`IsInitialized`, `DisableInput`. The widgets live on the binding. A script usually names the
+module `imgui`, so both spellings are found through that one name.
+
 - Functions drop the `ig` prefix and keep ImGui's C signature: `igSliderFloat` → `imgui.SliderFloat`.
 - Enum constants live in `imgui.lib` (`imgui.lib.ImGuiCol_WindowBg`) and are also reachable
   as `imgui.Col.WindowBg`, `imgui.StyleVar.WindowRounding`, `imgui.Cond.FirstUseEver`,
@@ -99,7 +106,7 @@ value (alpha, blue, green, red); `PushStyleColor` takes an `ImVec4`.
 ## Images
 
 ```lua
-local tex = mimgui.CreateTextureFromFile(path)   -- ImTextureID, nil when the file cannot be read
+local tex = imgui.CreateTextureFromFile(path)   -- ImTextureID, nil when the file cannot be read
 imgui.Image(tex, imgui.ImVec2(w, h))
 ```
 
@@ -114,7 +121,7 @@ dl:AddImage(tex, imgui.ImVec2(x1, y1), imgui.ImVec2(x2, y2), imgui.ImVec2(0, 0),
 ```
 
 - The texture is not released by the garbage collector: the draw list of the frame still
-  points at it. Release it yourself with `mimgui.ReleaseTexture(tex)` when the script is done.
+  points at it. Release it yourself with `imgui.ReleaseTexture(tex)` when the script is done.
 
 ## Drawing without a window
 
@@ -129,7 +136,7 @@ dl:AddTextFontPtr(imgui.GetFont(), size, pos, colour, text)
 
 ## Gotchas
 
-- No `imgui.Process`: the loader owns input. `mimgui.DisableInput = true` turns the
+- No `imgui.Process`: the loader owns input. `imgui.DisableInput = true` turns the
   script's input handling off.
 - No `imgui.OnDrawFrame` on this loader: it is the older MoonLoader API. Use `imgui.OnFrame`.
 - Text with a format and arguments has taken the process down inside LuaJIT's ccall on this

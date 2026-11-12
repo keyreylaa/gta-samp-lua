@@ -27,7 +27,7 @@ imgui.OnInitialize(function()
     io.Fonts:AddFontFromFileTTF(
         getWorkingDirectory() .. '/lib/mimgui/trebucbd.ttf',
         14 * MONET_DPI_SCALE, nil, ranges[0].Data)
-    mimgui.CreateFontsTexture()          -- upload the new atlas to the GPU
+    imgui.CreateFontsTexture()          -- upload the new atlas to the GPU
 end)
 ```
 
@@ -36,7 +36,7 @@ end)
 - `font_cfg` may be `nil`; use `imgui.ImFontConfig()` when you need `MergeMode`,
   `PixelSnapH`, `FontDataOwnedByAtlas`.
 - `imgui.ImVector_ImWchar()` is the `ImWchar*` holder; pass `vec[0].Data`.
-- `mimgui.InvalidateFontsTexture()` drops the uploaded texture; call it before
+- `imgui.InvalidateFontsTexture()` drops the uploaded texture; call it before
   `CreateFontsTexture()` when the atlas changes after the first frame.
 
 ## Icon fonts (merged)
@@ -56,7 +56,7 @@ imgui.OnInitialize(function()
     builder:BuildRanges(ranges)
     ICONS = io.Fonts:AddFontFromMemoryCompressedBase85TTF(data85, 16 * MONET_DPI_SCALE, cfg, ranges[0].Data)
     io.FontDefault = ICONS or io.FontDefault
-    mimgui.CreateFontsTexture()
+    imgui.CreateFontsTexture()
 end)
 ```
 
@@ -70,7 +70,7 @@ end)
 ## Gotchas
 
 - Adding a font after the atlas is built is ignored. Either use `imgui.OnInitialize` or
-  rebuild with `mimgui.CreateFontsTexture()`.
+  rebuild with `imgui.CreateFontsTexture()`.
 - A font pointer survives only until the next rebuild. Do not cache it in a config file or
   across a reload.
 - A glyph that is not in the range renders as `?` or an empty box. Check the range.
